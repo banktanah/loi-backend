@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\AssetController;
+use App\Http\Api\AssetApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,5 +20,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::prefix('asset')->group(function () {
-    Route::get('/list', [AssetController::class, 'index']);
+    Route::get('/list', [AssetApi::class, 'index']);
 });

@@ -229,4 +229,7 @@ return [
 
     ],
 
+    'endpoints' => [
+        'dashboard_be' => env('ENDPOINT_DASHBOARD_BE', 'http://localhost'),
+    ]
 ];

@@ -21,4 +21,5 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::prefix('asset')->group(function () {
     Route::get('/list', [AssetApi::class, 'index']);
+    Route::post('/detail', [AssetApi::class, 'detail']);
 });

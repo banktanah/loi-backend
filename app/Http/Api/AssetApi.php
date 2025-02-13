@@ -3,20 +3,27 @@
 namespace App\Http\Api;
 
 use App\Models\Dto\ApiResponse;
+use App\Services\PemanfaatanService;
+use App\Services\PerolehanService;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class AssetApi extends _BaseApi
 {
+    private $perolehanService;
+    private $pemanfaatanService;
+
     function __construct()
     {
         parent::__construct();
+        $this->perolehanService = new PerolehanService();
+        $this->pemanfaatanService = new PemanfaatanService();
     }
 
     public function index()
     {
-        $maps = $this->dashboardbe_general_map();
+        $maps = $this->perolehanService->getMapList();
 
         $sites = [];
         foreach($maps->hpls as $hpl){
@@ -34,52 +41,24 @@ class AssetApi extends _BaseApi
     public function detail(){
         $params = request()->all();
 
-        $maps = $this->dashboardbe_general_map();
-        $selected_site = null;
-        foreach($maps->hpls as $hpl){
-            if($params['site_name'] == $hpl->site_name){
-                $selected_site = $hpl;
-                break;
-            }
-        }
-
-        $data = Cache::remember("dashboardbe.detail.perolehan.$selected_site->perolehan_id", 300, function () use($selected_site) {
-            $response = Http::post("$this->endpoints_dashboard_be/dashboard/services/detail/perolehan", [
-                'token' => $this->generate_dashboardbe_token(),
-                'perolehan_id' => $selected_site->perolehan_id,
-            ]);
-
-            $response_json = $response->json();
-            if(empty($response_json)){
-                throw new Exception($response->body(), 500);
-            }
-
-            return json_decode(json_encode($response_json));
-        });
+        $data = $this->perolehanService->getDetail($params['site_name']);
 
         $result = json_decode(json_encode($data->perolehan), true);
         $result['geojsons'] = $data->bidangs_geodata;
         $result['photos'] = $data->fotos;
-        $result['masterplan'] = !empty($data->fotos)? $data->fotos[0]: [];
+
+        if(!empty($params['with'])){
+            if(in_array('profile', $params['with'])){
+                $result['profile'] = $this->pemanfaatanService->getProfile($params['site_name']);
+            }
+            if(in_array('regulation', $params['with'])){
+                $result['regulation'] = $this->pemanfaatanService->getRegulation($params['site_name']);
+            }
+            if(in_array('masterplan', $params['with'])){
+                $result['masterplan'] = $this->pemanfaatanService->getMasterPlan($params['site_name']);
+            }
+        }
 
         return response()->json(new ApiResponse($result));
-    }
-
-    //privates
-    private function dashboardbe_general_map(){
-        $data = Cache::remember('dashboardbe.general.map', 300, function () {
-            $response = Http::post("$this->endpoints_dashboard_be/dashboard/services/general/map", [
-                'token' => $this->generate_dashboardbe_token(),
-            ]);
-
-            $response_json = $response->json();
-            if(empty($response_json)){
-                throw new Exception($response->body(), 500);
-            }
-
-            return json_decode(json_encode($response_json));
-        });
-
-        return $data;
     }
 }

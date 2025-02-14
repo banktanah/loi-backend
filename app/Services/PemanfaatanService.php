@@ -41,11 +41,11 @@ class PemanfaatanService
             ]);
 
             $response_json = $response->json();
-            if(empty($response_json)){
-                return null;
-            }
+            // if(empty($response_json)){
+            //     return null;
+            // }
 
-            return json_decode(json_encode($response_json))[0];
+            return json_decode(json_encode($response_json));
         });
 
         return $data;

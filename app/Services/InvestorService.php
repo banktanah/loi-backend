@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Libraries\Utils;
 use App\Models\Investment;
+use App\Models\InvestmentDocument;
 use App\Models\Investor;
 use Exception;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class InvestorService
@@ -70,21 +72,86 @@ class InvestorService
             ->orderBy('investment_id', 'DESC')
             ->first();
 
-        $lastNumber = 0;
+        $lastCounter = 0;
         if(!empty($lastInvestment)){
-            
+            $investmentIdArr = explode("/", $lastInvestment->investment_id);
+            $lastCounter = intval($investmentIdArr[count($investmentIdArr)-1]);
         }
+        $lastCounter++;
+        $lastCounter = sprintf('%04d', $lastCounter);
+
+        return $inv_id_prefix.$lastCounter;
     }
 
     public function listInvestment($investor_id = null){
-        $queryable = Investor::select("*");
+        $queryable = Investment::
+            select("*")
+            ->with('documents');
 
         if(!empty($investor_id)){
-            $queryable = $queryable->whereNotNull('approved_at');
+            $queryable = $queryable->where('investor_id', $investor_id);
         }
 
         $data = $queryable->get();
 
         return $data;
+    }
+
+    public function addInvestment($input){
+        if(!is_array($input)){
+            $input = json_encode(json_decode($input, true));
+        }
+
+        if(!empty($input['created_at'])){
+            throw new Exception("Invalid Operation", 500);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $newInvestment = new Investment($input);
+            $res = $newInvestment->save();
+
+            if(empty($input['proposal'])){
+                throw new Exception("Must include a proposal for register an Investment", 403);
+            }
+
+            $input['proposal']['investment_id'] = $newInvestment->investment_id;
+            $input['proposal']['document_type'] = 'PROPOSAL';
+            $newDocument = new InvestmentDocument($input['proposal']);
+            $res = $newDocument->save();
+
+            DB::commit();
+    
+            return $newInvestment;
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
+    }
+
+    public function addDocuments($input){
+        if(!is_array($input)){
+            $input = json_encode(json_decode($input, true));
+        }
+
+        if(!empty($input['created_at'])){
+            throw new Exception("Invalid Operation", 500);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            foreach($input['documents'] as $doc){
+                $doc['investment_id'] = $input['investment_id'];
+                $newDocument = new InvestmentDocument($doc);
+                $res = $newDocument->save();
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollback();
+            throw $e;
+        }
     }
 }

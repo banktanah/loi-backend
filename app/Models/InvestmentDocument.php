@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Investment extends Model
+class InvestmentDocument extends Model
 {
-    protected $table = 'investment';
+    protected $table = 'investment_document';
 
-    protected $primaryKey = 'investment_id';
+    protected $primaryKey = 'investment_document_id';
 
-    public $incrementing = false;
-    protected $keyType = 'string';
+    // public $incrementing = false;
+    // protected $keyType = 'string';
 
     // public $timestamps = false;
 
@@ -21,10 +21,10 @@ class Investment extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'investor_id',
-        'site_name',
-        'name',
-        'description'
+        'investment_id',
+        'document_type',
+        'filename',
+        'file'
     ];
 
     /**
@@ -40,9 +40,4 @@ class Investment extends Model
      * @var array<string, string>
      */
     protected $casts = [];
-    
-    public function documents()
-    {
-        return $this->hasMany(InvestmentDocument::class, 'investment_id', 'investment_id');
-    }
 }

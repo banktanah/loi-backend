@@ -31,7 +31,12 @@ class InvestorApi extends _BaseApi
     {
         $params = request()->all();
 
-        $test = $this->investorService->generateInvestmentId();
+        $test = $this->investorService->addInvestment([
+            'investor_id' => 'NIK_KTP_OR_NIB',
+            'site_name' => 'SITE_NAME',
+            'name' => 'Investment Name',
+            'description' => 'This is just a test'
+        ]);
 
         $active_only = false;
         if(!empty($params['active_only'])){
@@ -73,7 +78,23 @@ class InvestorApi extends _BaseApi
     public function listInvestment(){
         $params = request()->all();
 
-        $data = $this->investorService->get($params['investor_id']);
+        $data = $this->investorService->listInvestment($params['investor_id']);
+
+        return response()->json(new ApiResponse($data));
+    }
+
+    public function addInvestment(){
+        $params = request()->all();
+
+        $data = $this->investorService->addInvestment($params);
+
+        return response()->json(new ApiResponse($data));
+    }
+
+    public function addDocuments(){
+        $params = request()->all();
+
+        $data = $this->investorService->addDocuments($params);
 
         return response()->json(new ApiResponse($data));
     }

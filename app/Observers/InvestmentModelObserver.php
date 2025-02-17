@@ -12,6 +12,7 @@ class InvestmentModelObserver
     function __construct()
     {
         $this->investorService = new InvestorService();
+        $a = 1;
     }
 
     /**
@@ -20,10 +21,9 @@ class InvestmentModelObserver
      * @param  \App\Investment  $investment
      * @return void
      */
-    public function created(Investment $investment)
+    public function creating(Investment $investment)
     {
-        $investment = $this->investorService->generateInvestmentId();
-        $a = 1;
+        $investment->investment_id = $this->investorService->generateInvestmentId();
     }
 
     /**

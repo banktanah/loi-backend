@@ -38,7 +38,7 @@ class AssetApi extends _BaseApi
         return response()->json(new ApiResponse($sites));
     }
 
-    public function detail(){
+    public function detail($investor_id){
         $params = request()->all();
 
         $data = $this->perolehanService->getDetail($params['site_name']);

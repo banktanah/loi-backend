@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Investor extends Model
+class Investment extends Model
 {
-    protected $table = 'investor';
+    protected $table = 'investment';
 
-    protected $primaryKey = 'investor_id';
+    protected $primaryKey = 'investment_id';
 
     public $incrementing = false;
     protected $keyType = 'string';
@@ -20,26 +20,7 @@ class Investor extends Model
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'investor_id', 
-        'investor_type_id', 
-        'name', 
-        'email', 
-        'phone', 
-        'address',
-        'province',
-        'province_id',
-        'city',
-        'city_id',
-        'regency',
-        'regency_id',
-        'district',
-        'district_id',
-        'village',
-        'village_id',
-        'approved_at',
-        'approved_by'
-    ];
+    protected $fillable = [];
 
     /**
      * The attributes that should be hidden for serialization.

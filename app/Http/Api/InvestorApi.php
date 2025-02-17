@@ -59,12 +59,9 @@ class InvestorApi extends _BaseApi
     public function approve_registration(){
         $params = request()->all();
 
-        $existing = $this->investorService->get($params['investor_id']);
-        $existing->approved_at = new DateTime();
-        $existing->approved_by = "system";
-        $data = $this->investorService->update($existing);
+        $res = $this->investorService->approveRegistration($params['investor_id']);
 
-        return response()->json(new ApiResponse($data));
+        return response()->json(new ApiResponse($res));
     }
 
     public function detail(){
@@ -95,6 +92,14 @@ class InvestorApi extends _BaseApi
         $params = request()->all();
 
         $data = $this->investorService->addDocuments($params);
+
+        return response()->json(new ApiResponse($data));
+    }
+
+    public function approveInvestment(){
+        $params = request()->all();
+
+        $data = $this->investorService->approveInvestment($params['investment_id']);
 
         return response()->json(new ApiResponse($data));
     }

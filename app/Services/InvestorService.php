@@ -6,6 +6,7 @@ use App\Libraries\Utils;
 use App\Models\Investment;
 use App\Models\InvestmentDocument;
 use App\Models\Investor;
+use DateTime;
 use Exception;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,21 @@ use Illuminate\Support\Facades\Http;
 
 class InvestorService
 {
+    static $required_document_types  = [
+        [
+            'type' => 'PROPOSAL',
+            'required' => true
+        ],
+        [
+            'type' => 'NPWP',
+            'required' => true
+        ],
+        [
+            'type' => 'SURAT_USAHA',
+            'required' => true
+        ]
+    ];
+
     public function __construct(){
     }
 
@@ -59,6 +75,13 @@ class InvestorService
         $res = $existing->update($input);
 
         return $existing;
+    }
+
+    public function approveRegistration($investor_id){
+        $existing = $this->get($investor_id);
+        $existing->approved_at = new DateTime();
+        $existing->approved_by = "system";
+        $data = $this->update($existing);
     }
 
     public function generateInvestmentId(){
@@ -153,5 +176,37 @@ class InvestorService
             DB::rollback();
             throw $e;
         }
+    }
+
+    public function approveInvestment($investment_id){
+        $required_documents = [];
+        foreach(InvestorService::$required_document_types as $loop){
+            if($loop['required'] == true){
+                $required_documents []= $loop['type'];
+            }
+        }
+        $required_documents_str = implode(', ', $required_documents);
+
+        $investment = Investment::where('investment_id', $investment_id)->first();
+
+        $existing_docs = [];
+        $documents = InvestmentDocument::where('investment_id', $investment_id)->get();
+        foreach($documents as $doc){
+            $existing_docs []= $doc->document_type;
+        }
+
+        foreach(InvestorService::$required_document_types as $loop){
+            if($loop['required'] == true){
+                if(!in_array($loop['type'], $existing_docs)){
+                    throw new Exception("Investment must have: $required_documents_str to be approved", 403);
+                }
+            }
+        }
+
+        $investment->approved_at = new DateTime();
+        $investment->approved_by = "system";
+        $investment->save();
+
+        return $investment;
     }
 }

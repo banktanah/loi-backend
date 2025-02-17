@@ -38,9 +38,11 @@ Route::prefix('investor')->group(function () {
     Route::get('/list', [InvestorApi::class, 'list']);
     Route::get('/detail', [InvestorApi::class, 'detail']);
     Route::post('/register', [InvestorApi::class, 'register']);
-    Route::get('/approve_registration', [InvestorApi::class, 'approve_registration']);
+    Route::get('/approve-registration', [InvestorApi::class, 'approve_registration']);
     
     Route::get('/list-investment', [InvestorApi::class, 'listInvestment']);
     Route::post('/add-investment', [InvestorApi::class, 'addInvestment']);
     Route::post('/add-documents', [InvestorApi::class, 'addDocuments']);
+    Route::get('/approve-investment', [InvestorApi::class, 'approveInvestment']);
+    
 });

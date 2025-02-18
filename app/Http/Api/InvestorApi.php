@@ -31,13 +31,6 @@ class InvestorApi extends _BaseApi
     {
         $params = request()->all();
 
-        $test = $this->investorService->addInvestment([
-            'investor_id' => 'NIK_KTP_OR_NIB',
-            'site_name' => 'SITE_NAME',
-            'name' => 'Investment Name',
-            'description' => 'This is just a test'
-        ]);
-
         $active_only = false;
         if(!empty($params['active_only'])){
             $active_only = filter_var($params['active_only'], FILTER_VALIDATE_BOOLEAN);

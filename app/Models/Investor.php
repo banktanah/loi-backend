@@ -29,8 +29,6 @@ class Investor extends Model
         'address',
         'province',
         'province_id',
-        'city',
-        'city_id',
         'regency',
         'regency_id',
         'district',
@@ -38,7 +36,8 @@ class Investor extends Model
         'village',
         'village_id',
         'approved_at',
-        'approved_by'
+        'approved_by',
+        'company_profile'
     ];
 
     /**

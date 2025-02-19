@@ -53,6 +53,10 @@ class InvestorService
             throw new Exception("Invalid Operation", 500);
         }
 
+        if(empty($input['company_profile'])){
+            throw new Exception("Must include a company profile to create an account", 901);
+        }
+
         $new = new Investor($input);
         $res = $new->save();
 
@@ -136,7 +140,7 @@ class InvestorService
             $res = $newInvestment->save();
 
             if(empty($input['proposal'])){
-                throw new Exception("Must include a proposal for register an Investment", 403);
+                throw new Exception("Must include a proposal for register an Investment", 901);
             }
 
             $input['proposal']['investment_id'] = $newInvestment->investment_id;

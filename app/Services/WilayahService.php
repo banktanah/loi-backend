@@ -15,7 +15,7 @@ class WilayahService
 
     public function provinces(){
         $data = Cache::remember('wilayah.provinces', 300, function () {
-            $response = Http::get("$this->endpoint/provinces.json");
+            $response = Http::withoutVerifying()->get("$this->endpoint/provinces.json");
 
             $response_json = $response->json();
             if(empty($response_json)){
@@ -30,7 +30,7 @@ class WilayahService
 
     public function regencies($province_id){
         $data = Cache::remember("wilayah.regencies.$province_id", 300, function () use($province_id) {
-            $response = Http::get("$this->endpoint/regencies/$province_id.json");
+            $response = Http::withoutVerifying()->get("$this->endpoint/regencies/$province_id.json");
 
             $response_json = $response->json();
             if(empty($response_json)){
@@ -45,7 +45,7 @@ class WilayahService
 
     public function districts($regency_id){
         $data = Cache::remember("wilayah.districts.$regency_id", 300, function () use($regency_id) {
-            $response = Http::get("$this->endpoint/districts/$regency_id.json");
+            $response = Http::withoutVerifying()->get("$this->endpoint/districts/$regency_id.json");
 
             $response_json = $response->json();
             if(empty($response_json)){
@@ -60,7 +60,7 @@ class WilayahService
 
     public function villages($district_id){
         $data = Cache::remember("wilayah.villages.$district_id", 300, function () use($district_id) {
-            $response = Http::get("$this->endpoint/villages/$district_id.json");
+            $response = Http::withoutVerifying()->get("$this->endpoint/villages/$district_id.json");
 
             $response_json = $response->json();
             if(empty($response_json)){

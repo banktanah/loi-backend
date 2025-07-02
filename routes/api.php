@@ -3,6 +3,7 @@
 use App\Http\Api\AssetApi;
 use App\Http\Api\InvestorApi;
 use App\Http\Api\MasterApi;
+use App\Http\Api\UsersApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,4 +46,26 @@ Route::prefix('investor')->group(function () {
     Route::post('/add-documents', [InvestorApi::class, 'addDocuments']);
     Route::get('/approve-investment', [InvestorApi::class, 'approveInvestment']);
     
+});
+
+    Route::prefix('/users')->group(function () {
+        Route::post('/register', [UsersApi::class, 'register']);
+        Route::post('/login', [UsersApi::class, 'login']);
+        Route::post('/info', [UsersApi::class, 'info']);
+    });
+
+    // // Endpoint yang dilindungi (butuh token)
+    // Route::post('logout', 'UsersApi@logout');
+    // Route::post('refresh', 'UsersApi@refresh');
+    // Route::get('me', 'UsersApi@me');
+
+// Protected routes, menggunakan middleware auth:api (karena kita pakai Passport)
+Route::middleware('auth:api')->group(function () {
+    Route::get('/user', function (Request $request) {
+        return $request->user()->load('investor');
+    });
+    Route::prefix('/users')->group(function () {
+        Route::post('/info', [UsersApi::class, 'info']);
+    });
+    Route::post('/users/logout', 'UsersApi@logout');
 });

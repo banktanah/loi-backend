@@ -8,9 +8,10 @@ use App\Models\Dto\ApiResponse;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth; 
 
 class UsersApi extends Controller
 {
@@ -22,27 +23,69 @@ class UsersApi extends Controller
         $this->usersService = $usersService;
     }
 
+     /**
+     * Handle registration from multipart/form-data.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
     public function register(Request $request): JsonResponse
     {
+        // Validation rules for form-data
         $validator = Validator::make($request->all(), [
+            // Investor data
             'investor_id' => 'required|string|max:100|unique:investor,investor_id',
             'investor_type_id' => 'required|string',
             'name' => 'required|string|max:1000',
+            'phone' => 'nullable|string',
+            'address' => 'nullable|string',
+            'province_id' => 'nullable|string',
+            'regency_id' => 'nullable|string',
+            'district_id' => 'nullable|string',
+            'village_id' => 'nullable|string',
+            
+            // File upload validation
+            'company_profile' => 'required|file|mimes:pdf,doc,docx|max:5120', // Example: PDF/Word, max 5MB
+
+            // User data
             'email' => 'required|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        if ($validator->fails()) {
-            $errorMessage = implode(' ', $validator->errors()->all());
-            return response()->json(new ApiResponse(ApiResponse::CODE_FAILED, $errorMessage), 422);
+         if ($validator->fails()) {
+            // THE FIX:
+            // 1. Get the validation error object.
+            $errorMessages = $validator->errors()->all(); 
+            // 2. Join all error messages into a single string.
+            $flatErrorMessage = implode(' ', $errorMessages); 
+            
+            // 3. Pass the flattened string as the message to the DTO.
+            $responseDto = new ApiResponse(ApiResponse::CODE_FAILED, $flatErrorMessage);
+            return response()->json($responseDto, 422);
         }
 
         try {
-            $user = $this->usersService->registerInvestorAndUser($validator->validated());
-            return response()->json(new ApiResponse($user), 201);
+            $validatedData = $validator->validated();
+            if ($request->hasFile('company_profile')) {
+                $path = $request->file('company_profile')->store('company_profiles', 'public');
+                $validatedData['company_profile_url'] = Storage::disk('public')->url($path);
+            } else {
+                 throw new Exception("Company profile file is required.", 422);
+            }
+            $user = $this->usersService->registerInvestorAndUser($validatedData);
+            
+            // This now uses the 1-argument constructor for success
+            $responseDto = new ApiResponse($user); 
+            // We'll add a custom success message manually for consistency
+            $responseDto->message = "Registration successful."; 
+            
+            return response()->json($responseDto, 201);
         } catch (Exception $e) {
+             Log::error("User Registration Failed: " . $e->getMessage());
             $code = is_numeric($e->getCode()) && $e->getCode() > 0 ? $e->getCode() : 500;
-            return response()->json(new ApiResponse(ApiResponse::CODE_ERROR, $e->getMessage()), $code);
+            // This uses the 2-argument constructor for general errors
+            $responseDto = new ApiResponse(ApiResponse::CODE_ERROR, $e->getMessage());
+            return response()->json($responseDto, $code);
         }
     }
 

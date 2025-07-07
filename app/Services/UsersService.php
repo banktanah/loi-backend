@@ -11,14 +11,15 @@ use Illuminate\Support\Facades\Hash;
 
 class UsersService
 {
-    /**
+     /**
      * Register a new User and their Investor Profile in a single transaction.
-     * @param array $data
+     * @param array $data Complete data, including the company_profile_url
      * @return User
      * @throws Exception
      */
-    public function registerInvestorAndUser(array $data): User
+    public function registerInvestorAndUser(array $data)
     {
+        // Validations for existence are still good
         if (User::where('email', $data['email'])->exists()) {
             throw new Exception("User with this email already exists.", 409);
         }
@@ -27,6 +28,7 @@ class UsersService
         }
 
         return DB::transaction(function () use ($data) {
+            // 1. Create the User
             $user = new User([
                 'email' => $data['email'],
                 'status' => 'pending',
@@ -35,13 +37,17 @@ class UsersService
             $user->password_hash = Hash::make($data['password']);
             $user->save();
 
+            // 2. Prepare Investor data
             $investorData = $data;
             $investorData['user_id'] = $user->id;
+
+            // CHANGE: Assign the generated URL to the company_profile column
+            $investorData['company_profile'] = $data['company_profile_url'];
 
             $investor = new Investor($investorData);
             $investor->save();
             
-            return $user->fresh(['investor']);
+            return $user->load('investor');
         });
     }
 

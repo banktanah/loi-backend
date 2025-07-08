@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth; 
+use App\User;
 
 class UsersApi extends Controller
 {
@@ -19,7 +20,7 @@ class UsersApi extends Controller
 
     public function __construct(UsersService $usersService)
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+        $this->middleware('auth:api', ['except' => ['login', 'register', 'activate']]);
         $this->usersService = $usersService;
     }
 
@@ -143,5 +144,34 @@ class UsersApi extends Controller
             'token_type' => 'bearer',
             'expires_in' => Auth::guard('api')->factory()->getTTL() * 60
         ];
+    }
+
+    /**
+     * Activate a user's account and show a success page.
+     *
+     * @param Request $request
+     * @return \Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
+     */
+    public function activate(Request $request)
+    {
+        $user = User::find($request->route('id'));
+
+        // Untuk link yang tidak valid, kita tetap kembalikan JSON error
+        if (!$user || ! hash_equals((string) $request->route('hash'), sha1($user->getEmailForVerification()))) {
+            // Anda bisa juga membuat halaman error custom di sini
+            return response()->json(new ApiResponse(ApiResponse::CODE_FAILED, 'Link aktivasi tidak valid atau telah kedaluwarsa.'), 400);
+        }
+
+        // Jika user sudah aktif, kita tetap tampilkan halaman sukses
+        if ($user->status === 'active') {
+            return view('activation.success');
+        }
+        
+        // Ubah status dan simpan
+        $user->status = 'active';
+        $user->save();
+
+        // THE FIX: Kembalikan view Blade, bukan JSON
+        return view('activation.success');
     }
 }

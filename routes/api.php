@@ -54,10 +54,11 @@ Route::prefix('investor')->group(function () {
         Route::post('/info', [UsersApi::class, 'info']);
     });
 
-    // // Endpoint yang dilindungi (butuh token)
-    // Route::post('logout', 'UsersApi@logout');
-    // Route::post('refresh', 'UsersApi@refresh');
-    // Route::get('me', 'UsersApi@me');
+// DEFINISIKAN RUTE AKTIVASI DI SINI, DI LUAR GRUP ATAU DI DALAM JIKA PERLU
+// Ini adalah cara yang benar untuk mendefinisikan rute aktivasi
+Route::get('/users/activate/{id}/{hash}', [UsersApi::class, 'activate'])
+    ->name('users.activate')  // <-- FIX #1: Memberi nama pada rute
+    ->middleware('signed');   // <-- PENTING: Untuk keamanan URL
 
 // Protected routes, menggunakan middleware auth:api (karena kita pakai Passport)
 Route::middleware('auth:api')->group(function () {

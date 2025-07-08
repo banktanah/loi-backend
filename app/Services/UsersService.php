@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\User;
 use App\Models\Investor;
+use App\Notifications\ActivateUserAccount;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+
 
 class UsersService
 {
@@ -46,6 +48,7 @@ class UsersService
 
             $investor = new Investor($investorData);
             $investor->save();
+            $user->notify(new ActivateUserAccount);
             
             return $user->load('investor');
         });

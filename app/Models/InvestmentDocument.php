@@ -6,38 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 
 class InvestmentDocument extends Model
 {
-    protected $table = 'investment_document';
-
-    protected $primaryKey = 'investment_document_id';
-
-    // public $incrementing = false;
-    // protected $keyType = 'string';
-
-    // public $timestamps = false;
+    /**
+     * Nama tabel di database.
+     */
+    protected $table = 'investment_documents';
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Atribut yang bisa diisi secara massal.
      */
     protected $fillable = [
         'investment_id',
-        'document_type',
-        'filename',
-        'file'
+        'tipe_dokumen',
+        'nama_file_asli',
+        'dokumen_url',
+        'ukuran_file',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
+     * Relasi: Satu Dokumen dimiliki oleh satu Investment.
+     * THE FIX: Sesuaikan foreign key dan owner key pada relasi.
      */
-    protected $hidden = [];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [];
+    public function investment()
+    {
+        // Foreign key di tabel ini adalah 'investment_id'.
+        // Owner key (primary key) di tabel 'investments' adalah 'investment_id'.
+        return $this->belongsTo(Investment::class, 'investment_id', 'investment_id');
+    }
 }

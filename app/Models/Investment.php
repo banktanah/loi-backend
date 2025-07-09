@@ -6,43 +6,66 @@ use Illuminate\Database\Eloquent\Model;
 
 class Investment extends Model
 {
-    protected $table = 'investment';
-
-    protected $primaryKey = 'investment_id';
-
-    public $incrementing = false;
-    protected $keyType = 'string';
-
-    // public $timestamps = false;
+    /**
+     * Nama tabel di database.
+     */
+    protected $table = 'investments';
 
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Primary key untuk model ini.
+     * THE FIX: Beritahu Eloquent nama primary key yang baru.
+     */
+    protected $primaryKey = 'investment_id';
+
+    /**
+     * Apakah primary key-nya auto-incrementing? (Ya)
+     */
+    public $incrementing = true;
+
+    /**
+     * Tipe data dari primary key. (Untuk casting)
+     */
+    protected $keyType = 'int';
+
+    /**
+     * Atribut yang bisa diisi secara massal.
+     * Kita tidak perlu memasukkan 'investment_id' di sini karena auto-increment.
      */
     protected $fillable = [
-        'investor_id',
+        'user_id',
+        'perolehan_id',
         'site_name',
-        'name',
-        'description'
+        'tujuan_pemanfaatan',
+        'deskripsi_rencana_proyek',
+        'skema_pemanfaatan',
+        'status',
+        'catatan_verifikator',
+        'tanggal_pengajuan',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
+     * Atribut yang harus di-cast ke tipe data tertentu.
      */
-    protected $hidden = [];
+    protected $casts = [
+        'tanggal_pengajuan' => 'datetime',
+    ];
 
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
+     * Relasi: Satu Investment dimiliki oleh satu User.
      */
-    protected $casts = [];
-    
+    public function user()
+    {
+        return $this->belongsTo('App\User', 'user_id', 'id');
+    }
+
+    /**
+     * Relasi: Satu Investment bisa memiliki banyak Dokumen.
+     * THE FIX: Sesuaikan foreign key dan local key pada relasi.
+     */
     public function documents()
     {
+        // Foreign key di tabel 'investment_documents' adalah 'investment_id'.
+        // Local key (primary key) di tabel 'investments' ini juga adalah 'investment_id'.
         return $this->hasMany(InvestmentDocument::class, 'investment_id', 'investment_id');
     }
 }

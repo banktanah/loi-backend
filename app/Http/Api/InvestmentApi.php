@@ -56,7 +56,7 @@ class InvestmentApi extends _BaseApi
 
             $investment = $this->investmentService->createInvestment($validatedData, array_filter($files));
 
-            $responseDto = new ApiResponse($investment, "Investment interest submitted successfully.");
+            $responseDto = new ApiResponse(ApiResponse::CODE_SUCCESS, $investment, "Data peminatan lahan tanah berhasil terkirim");
             return response()->json($responseDto, 201);
 
         } catch (Exception $e) {

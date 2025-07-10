@@ -88,27 +88,6 @@ class InvestorService
         $data = $this->update($existing);
     }
 
-    public function generateInvestmentId(){
-        $currYear = date("Y");
-        $currMonth = intval(date("n"));
-        $currMonthRoman = Utils::numberToRomanRepresentation($currMonth);
-
-        $inv_id_prefix = "INV/$currYear/$currMonthRoman/";
-        $lastInvestment = Investment::
-            where('investment_id', 'like', "$inv_id_prefix%")
-            ->orderBy('investment_id', 'DESC')
-            ->first();
-
-        $lastCounter = 0;
-        if(!empty($lastInvestment)){
-            $investmentIdArr = explode("/", $lastInvestment->investment_id);
-            $lastCounter = intval($investmentIdArr[count($investmentIdArr)-1]);
-        }
-        $lastCounter++;
-        $lastCounter = sprintf('%04d', $lastCounter);
-
-        return $inv_id_prefix.$lastCounter;
-    }
 
     public function listInvestment($investor_id = null){
         $queryable = Investment::

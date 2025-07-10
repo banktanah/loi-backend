@@ -35,7 +35,6 @@ class InvestmentService
             $investmentData['tanggal_pengajuan'] = now();
 
             $investment = Investment::create($investmentData);
-            dd($investment);
 
             // 2. Proses dan simpan setiap dokumen
             foreach ($files as $tipe_dokumen => $file) {

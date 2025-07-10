@@ -23,7 +23,7 @@ class InvestmentModelObserver
      */
     public function creating(Investment $investment)
     {
-        $investment->investment_id = $this->investorService->generateInvestmentId();
+        
     }
 
     /**

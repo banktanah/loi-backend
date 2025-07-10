@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\InvestmentSubmitted;
 
 class InvestmentService
 {
@@ -27,8 +28,10 @@ class InvestmentService
             throw new Exception("Authentication required.", 401);
         }
 
-        return DB::transaction(function () use ($user, $data, $files) {
-            // 1. Siapkan dan buat record Investment.
+        // Kita gunakan DB::transaction agar bisa menangkap objek investment
+        // dan mengirimkannya ke notifikasi setelah commit berhasil.
+        $investment = null;
+        DB::transaction(function () use ($user, $data, $files, &$investment) {
             $investmentData = $data;
             $investmentData['user_id'] = $user->id;
             $investmentData['status'] = 'Diajukan';
@@ -36,27 +39,38 @@ class InvestmentService
 
             $investment = Investment::create($investmentData);
 
-            // 2. Proses dan simpan setiap dokumen
             foreach ($files as $tipe_dokumen => $file) {
                 if (!is_file($file)) continue;
-
-                // THE FIX: Gunakan $investment->investment_id (primary key baru) untuk path folder.
                 $path = $file->store('investments/' . $investment->investment_id, 'public');
-
                 InvestmentDocument::create([
-                    // THE FIX: Gunakan $investment->investment_id sebagai foreign key.
-                    'investment_id' => $investment->investment_id, 
+                    'investment_id' => $investment->investment_id,
                     'tipe_dokumen' => $tipe_dokumen,
                     'nama_file_asli' => $file->getClientOriginalName(),
                     'dokumen_url' => Storage::disk('public')->url($path),
                     'ukuran_file' => $file->getSize(),
                 ]);
             }
-
-            Log::info("Investment created successfully with ID: " . $investment->investment_id);
-            
-            return $investment->load('documents');
         });
+
+        // Jika transaksi gagal, $investment akan tetap null dan error akan dilempar
+        if (!$investment) {
+            throw new Exception("Failed to create investment record.", 500);
+        }
+
+        // THE NEW STEP: Kirim notifikasi setelah semua data berhasil disimpan
+        try {
+            // Eager load relasi investor untuk digunakan di email (mengambil nama)
+            $user->load('investor'); 
+            $user->notify(new InvestmentSubmitted($investment, $user));
+            Log::info("Investment submission email sent for investment ID: " . $investment->investment_id);
+        } catch (Exception $e) {
+            // Jika pengiriman email gagal, jangan gagalkan seluruh proses.
+            // Cukup catat errornya.
+            Log::error("Failed to send investment submission email for investment ID: {$investment->investment_id}. Error: " . $e->getMessage());
+        }
+        
+        // Kembalikan data investment beserta dokumennya
+        return $investment->load('documents');
     }
 
     /**
